@@ -28,6 +28,10 @@ class LPNValidator extends CValidator
      * @var string - default country code ('GB', 'US' or 'RU')
      */
     public $defaultCountry = '';
+    /**
+     * @var bool
+     */
+    public $enableClientValidation=false;
     
     /**
      * validates $attribute in $object.
@@ -47,17 +51,17 @@ class LPNValidator extends CValidator
             }
             $translated_msg = Yii::t("LPNValidator.general", $this->emptyMessage, array('{attribute}' => $attribute));
             $this->addError($object, $attribute, $translated_msg);
-            return;
+            return $object->$attribute;
         }
         
-        Yii::import('application.components.libphonenumber.*');
+        Yii::import('libphonenumber.*');
         
         $phoneUtil   = \libphonenumber\PhoneNumberUtil::getInstance();
         $numberProto = $phoneUtil->parse($object->$attribute, $this->defaultCountry);
         
         if ( $phoneUtil->isValidNumber($numberProto) )
-        {// number valid
-            return $numberProto->countryCode . $numberProto->nationalNumber;
+        {// number is valid
+            return $phoneUtil->format($numberProto, \libphonenumber\PhoneNumberFormat::NATIONAL);  //$numberProto->countryCode . $numberProto->nationalNumber;
         }
         
         $translated_msg = Yii::t("LPNValidator.general", $this->message);
