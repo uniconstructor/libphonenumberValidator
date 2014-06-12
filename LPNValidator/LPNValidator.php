@@ -56,14 +56,18 @@ class LPNValidator extends CValidator
         
         Yii::import('libphonenumber.*');
         
-        $phoneUtil   = \libphonenumber\PhoneNumberUtil::getInstance();
-        $numberProto = $phoneUtil->parse($object->$attribute, $this->defaultCountry);
-        
-        if ( $phoneUtil->isValidNumber($numberProto) )
-        {// number is valid
-            return $phoneUtil->format($numberProto, \libphonenumber\PhoneNumberFormat::NATIONAL);  //$numberProto->countryCode . $numberProto->nationalNumber;
+        try
+        {
+            $phoneUtil   = \libphonenumber\PhoneNumberUtil::getInstance();
+            $numberProto = $phoneUtil->parse($object->$attribute, $this->defaultCountry);
+            if ( $phoneUtil->isValidNumber($numberProto) )
+            {// number is valid
+                return $phoneUtil->format($numberProto, \libphonenumber\PhoneNumberFormat::NATIONAL);  //$numberProto->countryCode . $numberProto->nationalNumber;
+            }
+        } catch ( Exception $e )
+        {
+            $this->addError($object, $attribute, $this->message);
         }
-        
         $translated_msg = Yii::t("LPNValidator.general", $this->message);
         $this->addError($object, $attribute, $translated_msg);
     }
