@@ -1,13 +1,19 @@
 <?php
 
+// import pareser lib
+Yii::import('libphonenumber.*');
+
+use libphonenumber;
+
 /**
  * Lib Phone Number validator for Yii framework
- * @todo add custom return format
+ * 
+ * @see https://github.com/davideme/libphonenumber-for-PHP
  */
 class LPNValidator extends CValidator
 {
     /**
-     * @var bool $allowEmpty Whether the attribute is allowed to be empty.
+     * @var bool $allowEmpty - Whether the attribute is allowed to be empty.
      */
     public $allowEmpty = false;
     /**
@@ -17,21 +23,23 @@ class LPNValidator extends CValidator
      * for the relevant AR class.
      */
     public $message = "Invalid phone number";
-
     /** 
-     * @var string $emptyMessage the message to be displayed if an empty value 
-     * is validated while 'allowEmpty' is false
+     * @var string $emptyMessage - the message to be displayed if an empty value 
+     *                             is validated while 'allowEmpty' is false
      */
     public $emptyMessage = "{attribute} cannot be blank";
-    
     /**
      * @var string - default country code ('GB', 'US' or 'RU')
      */
-    public $defaultCountry = '';
+    public $defaultCountry;
     /**
      * @var bool
      */
-    public $enableClientValidation=false;
+    public $enableClientValidation = false;
+    /**
+     * @var string
+     */
+    public $outputFormat = \libphonenumber\PhoneNumberFormat::NATIONAL;
     
     /**
      * validates $attribute in $object.
@@ -43,32 +51,24 @@ class LPNValidator extends CValidator
      */
     protected function validateAttribute($object, $attribute)
     {
-        if ( empty($object->$attribute) )
-        {// first, if 'allowEmpty' is true and the attribute is indeed empty - finish execution - all good!
-            if ( $this->allowEmpty )
-            {
-                return;
+        if ( $value = trim($object->$attribute) )
+        {// attribute contains value
+            try
+            {// parser throws an exception for any error
+                /* @var $parser \libphonenumber\PhoneNumberUtil */
+                $parser     = \libphonenumber\PhoneNumberUtil::getInstance();
+                /* @var $numberData PhoneNumber */
+                $numberData = $parser->parse($value, $this->defaultCountry);
+                // format and transform to string
+                $object->$attribute = $phoneUtil->format($numberData, $this->outputFormat);
+            }catch ( NumberParseException $e )
+            {// incorrect number
+                $this->addError($object, $attribute, $e->message);
             }
-            $translated_msg = Yii::t("LPNValidator.general", $this->emptyMessage, array('{attribute}' => $attribute));
-            $this->addError($object, $attribute, $translated_msg);
-            return $object->$attribute;
+        }elseif ( ! $this->allowEmpty )
+        {// attribute cannot be empty
+            $emptyMessage = Yii::t("LPNValidator.general", $this->emptyMessage, array('{attribute}' => $attribute));
+            $this->addError($object, $attribute, $emptyMessage);
         }
-        
-        Yii::import('libphonenumber.*');
-        
-        try
-        {
-            $phoneUtil   = \libphonenumber\PhoneNumberUtil::getInstance();
-            $numberProto = $phoneUtil->parse($object->$attribute, $this->defaultCountry);
-            if ( $phoneUtil->isValidNumber($numberProto) )
-            {// number is valid
-                return $phoneUtil->format($numberProto, \libphonenumber\PhoneNumberFormat::NATIONAL);  //$numberProto->countryCode . $numberProto->nationalNumber;
-            }
-        } catch ( Exception $e )
-        {
-            $this->addError($object, $attribute, $this->message);
-        }
-        $translated_msg = Yii::t("LPNValidator.general", $this->message);
-        $this->addError($object, $attribute, $translated_msg);
     }
 }
