@@ -1,12 +1,10 @@
 <?php
 
-// import pareser lib
+// import parser lib
 Yii::import('libphonenumber.*');
 
-use libphonenumber;
-
 /**
- * Lib Phone Number validator for Yii framework
+ * Phone Number validator for Yii framework
  * 
  * @see https://github.com/davideme/libphonenumber-for-PHP
  */
@@ -56,11 +54,11 @@ class LPNValidator extends CValidator
             try
             {// parser throws an exception for any error
                 /* @var $parser \libphonenumber\PhoneNumberUtil */
-                $parser     = \libphonenumber\PhoneNumberUtil::getInstance();
+                $parser             = \libphonenumber\PhoneNumberUtil::getInstance();
                 /* @var $numberData PhoneNumber */
-                $numberData = $parser->parse($value, $this->defaultCountry);
+                $numberData         = $parser->parse($value, $this->defaultCountry);
                 // format and transform to string
-                $object->$attribute = $phoneUtil->format($numberData, $this->outputFormat);
+                $object->$attribute = $parser->format($numberData, $this->outputFormat);
             }catch ( NumberParseException $e )
             {// incorrect number
                 $this->addError($object, $attribute, $e->message);
