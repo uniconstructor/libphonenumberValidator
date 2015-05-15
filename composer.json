@@ -1,0 +1,14 @@
+{
+    "name": "uniconstructor/simpleWorkflow",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "uniconstructor",
+            "homepage": "https://github.com/uniconstructor"
+        }
+    ],
+    "require": {
+        "php": ">=5.4.0",
+        "yiisoft/yii": ">=1.1.15"
+    }
+}
